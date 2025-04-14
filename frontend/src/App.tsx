@@ -1,35 +1,82 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState, useEffect } from "react";
+import {
+  Container,
+  Typography,
+  CircularProgress,
+  Alert,
+  Box,
+} from "@mui/material";
+import UploadForm from "./components/UploadForm";
+import SummaryCard from "./components/SummaryCard";
+import { fetchResults, Summary } from "./api";
+
+type Status = "idle" | "uploading" | "analysing" | "done" | "error";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [submissionId, setSubmissionId] = useState<string | null>(null);
+  const [status, setStatus] = useState<Status>("idle");
+  const [summary, setSummary] = useState<Summary | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleUploadComplete = (id: string) => {
+    setSubmissionId(id);
+    setStatus("analysing");
+  };
+
+  useEffect(() => {
+    if (status !== "analysing" || !submissionId) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetchResults(submissionId);
+        if (res.status === "done" && res.summary) {
+          setStatus("done");
+          setSummary(res.summary);
+          clearInterval(interval);
+        }
+      } catch (err) {
+        setStatus("error");
+        setError("Failed to fetch analysis result.");
+        clearInterval(interval);
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [submissionId, status]);
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <Container maxWidth="sm" sx={{ mt: 6 }}>
+      <Typography variant="h4" gutterBottom>
+        Meet Summarizer
+      </Typography>
+
+      {status === "idle" && (
+        <UploadForm
+          onUploadComplete={(id) => {
+            setStatus("uploading");
+            handleUploadComplete(id);
+          }}
+        />
+      )}
+
+      {status === "analysing" && (
+        <Box sx={{ textAlign: "center", mt: 4 }}>
+          <CircularProgress />
+          <Typography variant="body1" sx={{ mt: 2 }}>
+            Analysing your file...
+          </Typography>
+        </Box>
+      )}
+
+      {status === "done" && summary && <SummaryCard summary={summary} />}
+
+      {status === "error" && error && (
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {error}
+        </Alert>
+      )}
+    </Container>
+  );
 }
 
-export default App
+export default App;

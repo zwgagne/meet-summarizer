@@ -9,8 +9,7 @@ def create_app():
     app.config.from_object(Config)
     db.init_app(app)
 
-    app.register_blueprint(upload_bp)
-    app.register_blueprint(analyse_bp)
-    print("analyse_bp registered")
+    app.register_blueprint(upload_bp, url_prefix="/api")
+    app.register_blueprint(analyse_bp, url_prefix="/api")
 
     return app

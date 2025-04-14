@@ -28,3 +28,18 @@ def upload_file():
     db.session.commit()
 
     return jsonify({"id": submission.id, "status": submission.status}), 201
+
+
+@upload_bp.route("/results/<submission_id>", methods=["GET"])
+def get_results(submission_id):
+    submission = db.session.get(Submission, submission_id)
+
+    if not submission:
+        return jsonify({"error": "submission not found"}), 404
+
+    return jsonify({
+        "id": submission.id,
+        "filename": submission.filename,
+        "file_type": submission.file_type,
+        "status": submission.status,
+    }), 200

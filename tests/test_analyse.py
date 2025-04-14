@@ -32,8 +32,18 @@ def test_analyse_text_submission(client):
         db.session.commit()
         submission_id = submission.id
 
+    # openai mock
     with patch("app.routes.analyse.summarize_text") as mock_summarize:
-        mock_summarize.return_value = "Title: Blob\nPoints: - 1 - 2\nActions: - Do this"
+        mock_summarize.return_value = """Title: weekly blob sync
+
+        Key Points:
+        - Blob griotte is super happy
+        - Blob coco is not happy
+
+        Action Items:
+        - Schedule a blob party
+        - Send a blob to the blob team
+        """
 
         response = client.post("/analyse", json={"id": submission_id})
         json_data = response.get_json()
@@ -42,8 +52,19 @@ def test_analyse_text_submission(client):
         assert json_data["status"] == "done"
         assert "summary" in json_data
 
+        summary_data = json_data["summary"]
+        assert summary_data["title"] == "weekly blob sync"
+        assert summary_data["key_points"] == [
+            "Blob griotte is super happy",
+            "Blob coco is not happy"
+        ]
+        assert summary_data["action_items"] == [
+            "Schedule a blob party",
+            "Send a blob to the blob team"
+        ]
+
         with client.application.app_context():
-            updated = Submission.query.get(submission_id)
+            updated = db.session.get(Submission, submission_id)
             assert updated.status == "done"
             assert updated.summary is not None
             assert updated.summary.raw_response == mock_summarize.return_value

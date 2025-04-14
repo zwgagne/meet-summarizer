@@ -4,6 +4,7 @@ from app.database import db
 from app.models.submission import Submission
 from app.models.summary import Summary
 from app.services.openai_service import summarize_text
+from app.services.openai_parser import parse_openai_summary
 
 analyse_bp = Blueprint("analyse", __name__)
 
@@ -15,7 +16,7 @@ def analyse_submission():
     if not submission_id:
         return jsonify({"error": "missing submission id"}), 400
 
-    submission = Submission.query.get(submission_id)
+    submission = submission = db.session.get(Submission, submission_id)
 
     if not submission:
         return jsonify({"error": "submission not found"}), 404
@@ -32,6 +33,7 @@ def analyse_submission():
 
     try:
         result = summarize_text(content)
+        parsed = parse_openai_summary(result)
     except Exception as e:
         submission.status = "error"
         db.session.commit()
@@ -39,9 +41,9 @@ def analyse_submission():
 
     summary = Summary(
         submission_id=submission.id,
-        title="(to extract)",  # todo: replace with actual title extraction
-        key_points=[],
-        action_items=[],
+        title=parsed["title"],
+        key_points=parsed["key_points"],
+        action_items=parsed["action_items"],
         raw_response=result
     )
 

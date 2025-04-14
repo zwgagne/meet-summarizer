@@ -11,5 +11,6 @@ def create_app():
 
     app.register_blueprint(upload_bp)
     app.register_blueprint(analyse_bp)
+    print("analyse_bp registered")
 
     return app

@@ -37,9 +37,18 @@ def get_results(submission_id):
     if not submission:
         return jsonify({"error": "submission not found"}), 404
 
-    return jsonify({
+    response = {
         "id": submission.id,
         "filename": submission.filename,
         "file_type": submission.file_type,
         "status": submission.status,
-    }), 200
+    }
+
+    if submission.summary:
+        response["summary"] = {
+            "title": submission.summary.title,
+            "key_points": submission.summary.key_points,
+            "action_items": submission.summary.action_items,
+        }
+
+    return jsonify(response), 200

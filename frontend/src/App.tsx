@@ -25,23 +25,26 @@ function App() {
 
   useEffect(() => {
     if (status !== "analysing" || !submissionId) return;
-
+  
     const interval = setInterval(async () => {
       try {
         const res = await fetchResults(submissionId);
         if (res.status === "done" && res.summary) {
-          setStatus("done");
           setSummary(res.summary);
-          clearInterval(interval);
+          setStatus("done");
+          clearInterval(interval); 
         }
       } catch (err) {
-        setStatus("error");
+        console.error("❌ Error while polling:", err);
         setError("Failed to fetch analysis result.");
-        clearInterval(interval);
+        setStatus("error");
+        clearInterval(interval); 
       }
     }, 2000);
-
-    return () => clearInterval(interval);
+  
+    return () => {
+      clearInterval(interval);
+    };
   }, [submissionId, status]);
 
   return (

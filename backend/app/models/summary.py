@@ -13,4 +13,6 @@ class Summary(db.Model):
     action_items = db.Column(db.JSON, nullable=True)
     raw_response = db.Column(db.Text, nullable=True)
 
-    submission = db.relationship("Submission", backref=db.backref("summary", uselist=False))
+    # mirror relationship back to Submission
+    # ensures bidirectional access between submission and summary
+    submission = db.relationship("Submission", back_populates="summary")

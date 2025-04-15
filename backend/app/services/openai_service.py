@@ -1,11 +1,11 @@
-import openai
+from openai import OpenAI
 import os
 
-openai.api_key = os.getenv("open-ai-key")  # move to .env file
+client = OpenAI()
 
-def summarize_text(content):
+def summarize_text(content: str) -> str:
     prompt = f"""
-You are an AI assistant builted in a minimal meet summarizer app. Summarize the following meeting transcript into:
+You are an AI assistant built into a minimal meeting summarizer app. Summarize the following meeting transcript into:
 
 - A short title
 - Key points (as bullet list)
@@ -17,14 +17,14 @@ Transcript:
 \"\"\"
 """
 
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": "You are a really helpful meeting summarizer."},
             {"role": "user", "content": prompt}
         ],
         temperature=0.3,
-        max_tokens=800
+        max_tokens=800,
     )
 
     return response.choices[0].message.content

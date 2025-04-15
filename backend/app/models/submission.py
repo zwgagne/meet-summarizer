@@ -10,3 +10,5 @@ class Submission(db.Model):
     file_type = db.Column(db.String, nullable=False)
     status = db.Column(db.String, default="pending")
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    summary = db.relationship("Summary", back_populates="submission", uselist=False)
